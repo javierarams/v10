@@ -29,6 +29,7 @@
         "@videojs/mux-data",
         "@videojs/mux-video",
         "@videojs/native-hls-video",
+        "@videojs/playerjs-video",
         "@videojs/react",
         "@videojs/shaka-video",
         "@videojs/skins",
@@ -168,6 +169,12 @@
     },
     "packages/adapters/spotify-audio": {
       "component": "@videojs/spotify-audio",
+      "prerelease": true,
+      "prerelease-type": "rc",
+      "versioning": "prerelease"
+    },
+    "packages/adapters/playerjs-video": {
+      "component": "@videojs/playerjs-video",
       "prerelease": true,
       "prerelease-type": "rc",
       "versioning": "prerelease"

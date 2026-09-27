@@ -176,6 +176,7 @@
     "@videojs/mux-audio": "workspace:*",
     "@videojs/mux-data": "workspace:*",
     "@videojs/mux-video": "workspace:*",
+    "@videojs/playerjs-video": "workspace:*",
     "@videojs/shaka-video": "workspace:*",
     "@videojs/skins": "workspace:*",
     "@videojs/spotify-audio": "workspace:*",
@@ -197,6 +198,7 @@
     "@videojs/mux-audio": "workspace:*",
     "@videojs/mux-data": "workspace:*",
     "@videojs/mux-video": "workspace:*",
+    "@videojs/playerjs-video": "workspace:*",
     "@videojs/shaka-video": "workspace:*",
     "@videojs/spotify-audio": "workspace:*",
     "@videojs/tiktok-video": "workspace:*",
@@ -225,6 +227,9 @@
       "optional": true
     },
     "@videojs/mux-video": {
+      "optional": true
+    },
+    "@videojs/playerjs-video": {
       "optional": true
     },
     "@videojs/shaka-video": {

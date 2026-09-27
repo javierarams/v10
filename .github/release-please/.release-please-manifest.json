@@ -20,6 +20,7 @@
   "packages/skins": "10.0.0-rc.4",
   "packages/spf": "10.0.0-rc.4",
   "packages/adapters/spotify-audio": "10.0.0-rc.4",
+  "packages/adapters/playerjs-video": "10.0.0-rc.4",
   "packages/store": "10.0.0-rc.4",
   "packages/adapters/tiktok-video": "10.0.0-rc.4",
   "packages/adapters/twitch-video": "10.0.0-rc.4",
