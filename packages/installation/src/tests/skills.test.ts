@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { createSkillsInstructions, SKILL_AGENTS, skillInstallMethods, skillsCommand } from '../skills';
+import {
+  createSkillsInstructions,
+  SKILL_AGENTS,
+  skillInstallMethods,
+  skillsCommand,
+  skillsCommandParts,
+} from '../skills';
 
 describe('skillInstallMethods', () => {
   it('lists every agent in canonical order by default', () => {
@@ -55,6 +61,25 @@ describe('skillInstallMethods', () => {
       expect(method.steps).toEqual([expect.objectContaining({ input: 'https://github.com/videojs/skills' })]);
       expect(method.steps[0]!.commands).toBeUndefined();
     }
+  });
+});
+
+describe('skillsCommandParts', () => {
+  it('lists the selected options in flag order with agents in canonical order', () => {
+    const selection = { agents: ['other', 'claude-code'] as const, scope: 'local' as const, global: true };
+    const parts = skillsCommandParts(selection, '10.0.0');
+
+    expect(parts).toEqual({
+      command: 'npx @videojs/cli@10.0.0 agents skills',
+      options: [
+        { key: 'agents', flag: '--agent', value: 'claude-code,other' },
+        { key: 'scope', flag: '--scope', value: 'local' },
+        { key: 'global', flag: '--global' },
+      ],
+    });
+    expect(skillsCommand(selection, '10.0.0')).toBe(
+      'npx @videojs/cli@10.0.0 agents skills --agent claude-code,other --scope local --global'
+    );
   });
 });
 
