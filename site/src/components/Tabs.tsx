@@ -15,12 +15,12 @@ import clsx from 'clsx';
 import { useEffect, useId, useRef, useState } from 'react';
 
 import Check from '@/assets/icons/check.svg?react';
-import ChevronDown from '@/assets/icons/chevron-down.svg?react';
 import CopyIcon from '@/assets/icons/copy.svg?react';
 import { twMerge } from '@/utils/twMerge';
 import useIsHydrated from '@/utils/useIsHydrated';
 
 import CopyButton from './CopyButton';
+import { OverflowToggle, useOverflowCollapse } from './OverflowCollapse';
 
 export type TabsVariant = 'expanded' | 'compact';
 
@@ -277,10 +277,7 @@ interface TabsPanelProps {
   variant?: TabsVariant;
 }
 
-/**
- * Collapsed height for long code. Content that only slightly exceeds the cap is shown in full, since a "Show more"
- * button that reveals a couple of lines is more annoying than the extra height.
- */
+/** Collapsed height for long code, and how far past it code still shows in full. */
 const COLLAPSED_MAX_HEIGHT = 512;
 const COLLAPSE_SLACK = 96;
 
@@ -289,8 +286,11 @@ export function TabsPanel({ value, children, initial, className, variant = 'comp
   const contentRef = useRef<HTMLDivElement>(null);
   const [isActive, setIsActive] = useState(initial);
   const [ids, setIds] = useState<{ id: string; labelledBy: string } | null>(null);
-  const [overflows, setOverflows] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const { overflows, expanded, collapsed, expand, collapse } = useOverflowCollapse(contentRef, {
+    maxHeight: COLLAPSED_MAX_HEIGHT,
+    slack: COLLAPSE_SLACK,
+    measurable: isActive === true,
+  });
 
   useEffect(() => {
     const base = ref.current?.closest('[data-tabs-root]')?.getAttribute('data-tabs-id');
@@ -323,41 +323,7 @@ export function TabsPanel({ value, children, initial, className, variant = 'comp
     };
   }, [value]);
 
-  // A hidden panel has no layout, so measure once it is shown. The content's natural height decides whether the
-  // collapse affordance is needed at all.
-  useEffect(() => {
-    const content = contentRef.current;
-    if (!isActive || !content) return;
-
-    const measure = () => setOverflows(content.scrollHeight > COLLAPSED_MAX_HEIGHT + COLLAPSE_SLACK);
-
-    measure();
-    const observer = new ResizeObserver(measure);
-
-    observer.observe(content);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [isActive]);
-
-  const collapsed = overflows && !expanded;
-
-  const onCollapse = () => {
-    setExpanded(false);
-
-    // Collapsing from the bottom of a long block would otherwise leave the reader below the frame.
-    const root = ref.current?.closest('[data-tabs-root]');
-
-    if (root && root.getBoundingClientRect().top < 0) root.scrollIntoView({ block: 'start' });
-  };
-
-  const buttonClassName = clsx(
-    'flex items-center gap-1.5 h-7 pl-2.5 pr-3 rounded-full corner-squircle text-p3 font-medium cursor-pointer select-none',
-    variant === 'compact'
-      ? 'bg-warm-gray text-manila-light border border-manila-light/15 intent:border-manila-light/30'
-      : 'bg-surface-raised border border-line intent:border-line-strong'
-  );
+  const tone = variant === 'compact' ? 'dark' : 'surface';
 
   return (
     <div
@@ -386,14 +352,7 @@ export function TabsPanel({ value, children, initial, className, variant = 'comp
           data-search-ignore
           data-llms-ignore
         >
-          <button
-            type="button"
-            className={clsx(buttonClassName, 'pointer-events-auto')}
-            onClick={() => setExpanded(true)}
-          >
-            <ChevronDown className="size-4" />
-            Show more
-          </button>
+          <OverflowToggle expanded={false} tone={tone} onClick={expand} className="pointer-events-auto" />
         </div>
       )}
       {overflows && expanded && (
@@ -406,10 +365,7 @@ export function TabsPanel({ value, children, initial, className, variant = 'comp
           data-search-ignore
           data-llms-ignore
         >
-          <button type="button" className={buttonClassName} onClick={onCollapse}>
-            <ChevronDown className="size-4 rotate-180" />
-            Show less
-          </button>
+          <OverflowToggle expanded tone={tone} onClick={() => collapse(ref.current?.closest('[data-tabs-root]'))} />
         </div>
       )}
     </div>
