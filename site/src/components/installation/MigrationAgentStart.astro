@@ -1,0 +1,23 @@
+---
+import { installationCommand, SKILLS_REPOSITORY_URL, skillsCommand } from '@videojs/installation';
+
+import AgentPromptCard from '@/components/installation/AgentPromptCard.astro';
+import { PRODUCTION_URL } from '@/consts';
+
+interface Props {
+  /** The player the reader is migrating from, as the prompt names it (for example `Vidstack`). */
+  from: string;
+  /** The migration guide's slug under `guides/` (for example `migrate-from-vidstack`). */
+  guide: string;
+}
+
+const { from, guide } = Astro.props;
+const framework = Astro.params.framework === 'html' ? 'html' : 'react';
+const playerPackage = `@videojs/${framework}`;
+// HTML readers may be on Vue, Svelte, or plain HTML, so the CLI detects the framework from the project instead.
+const init = installationCommand(framework === 'react' ? { framework } : undefined, null);
+const guideUrl = new URL(`/docs/framework/${framework}/guides/${guide}.md`, PRODUCTION_URL);
+const prompt = `Install the Video.js skill: run \`${skillsCommand()}\` and follow the steps for the agent you are running in. If you can't run commands, follow the install instructions at ${SKILLS_REPOSITORY_URL} instead. Then run \`${init}\` to print version-matched installation instructions without changing files. Use the Video.js skill to migrate this project from ${from} to ${playerPackage}, following the ${from} migration guide that ships with the package at node_modules/${playerPackage}/docs/guides/${guide}.md. Until ${playerPackage} is installed, read ${guideUrl} instead. Before changing code, compare the ${from} features this project uses with the guide's "Known gaps" section and tell me about any that have no Video.js equivalent.`;
+---
+
+<AgentPromptCard prompt={prompt} />
