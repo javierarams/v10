@@ -24,75 +24,99 @@ interface SkinRequest {
 /** One module per preset in `@videojs/react`, exporting both skins, with a stylesheet per skin beside it. */
 const packageSkins: Record<
   SkinPreset,
-  { module: Loader; styles: Record<Skin, Loader>; components: Record<Skin, string> }
+  { module: Loader; styles: Partial<Record<Skin, Loader>>; components: Partial<Record<Skin, string>> }
 > = {
   video: {
     module: () => import('@videojs/react/video'),
     styles: {
       default: () => import('@videojs/react/video/skin.css'),
       minimal: () => import('@videojs/react/video/minimal-skin.css'),
+      starter: () => import('@videojs/react/video/starter-skin.css'),
     },
-    components: { default: 'VideoSkin', minimal: 'MinimalVideoSkin' },
+    components: { default: 'VideoSkin', minimal: 'MinimalVideoSkin', starter: 'StarterVideoSkin' },
   },
   'live-video': {
     module: () => import('@videojs/react/live-video'),
     styles: {
       default: () => import('@videojs/react/live-video/skin.css'),
       minimal: () => import('@videojs/react/live-video/minimal-skin.css'),
+      starter: () => import('@videojs/react/live-video/starter-skin.css'),
     },
-    components: { default: 'LiveVideoSkin', minimal: 'MinimalLiveVideoSkin' },
+    components: {
+      default: 'LiveVideoSkin',
+      minimal: 'MinimalLiveVideoSkin',
+      starter: 'StarterLiveVideoSkin',
+    },
   },
   audio: {
     module: () => import('@videojs/react/audio'),
     styles: {
       default: () => import('@videojs/react/audio/skin.css'),
       minimal: () => import('@videojs/react/audio/minimal-skin.css'),
+      starter: () => import('@videojs/react/audio/starter-skin.css'),
     },
-    components: { default: 'AudioSkin', minimal: 'MinimalAudioSkin' },
+    components: { default: 'AudioSkin', minimal: 'MinimalAudioSkin', starter: 'StarterAudioSkin' },
   },
   'live-audio': {
     module: () => import('@videojs/react/live-audio'),
     styles: {
       default: () => import('@videojs/react/live-audio/skin.css'),
       minimal: () => import('@videojs/react/live-audio/minimal-skin.css'),
+      starter: () => import('@videojs/react/live-audio/starter-skin.css'),
     },
-    components: { default: 'LiveAudioSkin', minimal: 'MinimalLiveAudioSkin' },
+    components: {
+      default: 'LiveAudioSkin',
+      minimal: 'MinimalLiveAudioSkin',
+      starter: 'StarterLiveAudioSkin',
+    },
   },
 };
 
 /** The Sandbox isolates each pick-one consumer catalog under its own generated alias. */
-const registrySkins: Record<Styling, Record<SkinKey, Loader>> = {
+const registrySkins: Record<Styling, Partial<Record<SkinKey, Loader>>> = {
   tailwind: {
     'video/default': () => import('@registry-react-tailwind-default/components/videojs/video/skin'),
     'video/minimal': () => import('@registry-react-tailwind-minimal/components/videojs/video/skin'),
+    'video/starter': () => import('@registry-react-tailwind-starter/components/videojs/video/skin'),
     'live-video/default': () => import('@registry-react-tailwind-default/components/videojs/live-video/skin'),
     'live-video/minimal': () => import('@registry-react-tailwind-minimal/components/videojs/live-video/skin'),
+    'live-video/starter': () => import('@registry-react-tailwind-starter/components/videojs/live-video/skin'),
     'audio/default': () => import('@registry-react-tailwind-default/components/videojs/audio/skin'),
     'audio/minimal': () => import('@registry-react-tailwind-minimal/components/videojs/audio/skin'),
+    'audio/starter': () => import('@registry-react-tailwind-starter/components/videojs/audio/skin'),
     'live-audio/default': () => import('@registry-react-tailwind-default/components/videojs/live-audio/skin'),
     'live-audio/minimal': () => import('@registry-react-tailwind-minimal/components/videojs/live-audio/skin'),
+    'live-audio/starter': () => import('@registry-react-tailwind-starter/components/videojs/live-audio/skin'),
   },
   css: {
     'video/default': () => import('@registry-react-css-default/components/videojs/video/skin'),
     'video/minimal': () => import('@registry-react-css-minimal/components/videojs/video/skin'),
+    'video/starter': () => import('@registry-react-css-starter/components/videojs/video/skin'),
     'live-video/default': () => import('@registry-react-css-default/components/videojs/live-video/skin'),
     'live-video/minimal': () => import('@registry-react-css-minimal/components/videojs/live-video/skin'),
+    'live-video/starter': () => import('@registry-react-css-starter/components/videojs/live-video/skin'),
     'audio/default': () => import('@registry-react-css-default/components/videojs/audio/skin'),
     'audio/minimal': () => import('@registry-react-css-minimal/components/videojs/audio/skin'),
+    'audio/starter': () => import('@registry-react-css-starter/components/videojs/audio/skin'),
     'live-audio/default': () => import('@registry-react-css-default/components/videojs/live-audio/skin'),
     'live-audio/minimal': () => import('@registry-react-css-minimal/components/videojs/live-audio/skin'),
+    'live-audio/starter': () => import('@registry-react-css-starter/components/videojs/live-audio/skin'),
   },
 };
 
-const registryComponents: Record<SkinKey, string> = {
+const registryComponents: Partial<Record<SkinKey, string>> = {
   'video/default': 'VideoSkin',
   'video/minimal': 'VideoSkin',
+  'video/starter': 'VideoSkin',
   'live-video/default': 'LiveVideoSkin',
   'live-video/minimal': 'LiveVideoSkin',
+  'live-video/starter': 'LiveVideoSkin',
   'audio/default': 'AudioSkin',
   'audio/minimal': 'AudioSkin',
+  'audio/starter': 'AudioSkin',
   'live-audio/default': 'LiveAudioSkin',
   'live-audio/minimal': 'LiveAudioSkin',
+  'live-audio/starter': 'LiveAudioSkin',
 };
 
 function pickComponent<Props>(module: object, name: string, key: string): ComponentType<Props> {
@@ -111,12 +135,21 @@ async function loadSkinComponent<Props>(request: SkinRequest): Promise<Component
   switch (source) {
     case 'package': {
       const entry = packageSkins[preset];
-      const [module] = await Promise.all([entry.module(), entry.styles[skin]()]);
+      const style = entry.styles[skin];
+      const component = entry.components[skin];
+      if (!style || !component) throw new Error(`Package skin ${key} is unavailable.`);
 
-      return pickComponent(module, entry.components[skin], key);
+      const [module] = await Promise.all([entry.module(), style()]);
+
+      return pickComponent(module, component, key);
     }
-    case 'registry':
-      return pickComponent(await registrySkins[styling][key](), registryComponents[key], key);
+    case 'registry': {
+      const load = registrySkins[styling][key];
+      const component = registryComponents[key];
+      if (!load || !component) throw new Error(`Registry skin ${key} is unavailable.`);
+
+      return pickComponent(await load(), component, key);
+    }
     case 'authored': {
       const { authoredExportName, loadAuthoredSkinModule } = await import('@app/shared/authored-skins');
       const module = await loadAuthoredSkinModule('react', preset, skin, styling);

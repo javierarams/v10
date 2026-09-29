@@ -8,4 +8,5 @@ export const REGISTRY_STYLING_LABELS = {
 export const REGISTRY_THEME_LABELS = {
   default: 'Default',
   minimal: 'Minimal',
+  starter: 'Starter',
 } as const satisfies Record<RegistryTheme, string>;

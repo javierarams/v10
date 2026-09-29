@@ -7,7 +7,7 @@ export type SkinTheme = SkinStyle['theme'];
 
 /** Resolve the public preset shared by a default or Minimal Skin. */
 export function skinPreset(name: SkinName): SkinPreset {
-  const preset = name.replace(/^(?:default|minimal)-/, '');
+  const preset = name.replace(/^(?:starter|default|minimal)-/, '');
   if (!isSkinPreset(preset)) throw new Error(`Unsupported Skin preset: \`${name}\`.`);
 
   return preset;
@@ -27,6 +27,8 @@ export function skinDirectory(name: SkinName): string {
 
 /** Runtime stylesheet entry carrying the shared, preset, and optional Minimal tokens relative to `src/styles`. */
 export function skinBaseStylesheet(preset: SkinPreset, theme: SkinTheme = 'default'): string {
+  if (theme === 'starter') return 'starter/base.css';
+
   const media = skinMedia(preset);
 
   return `${media}/${theme === 'minimal' ? 'minimal' : 'base'}.css`;
@@ -34,6 +36,8 @@ export function skinBaseStylesheet(preset: SkinPreset, theme: SkinTheme = 'defau
 
 /** Registry style item that owns one skin's exact stylesheet dependency closure. */
 export function skinStyleItemName(preset: SkinPreset, theme: SkinTheme): string {
+  if (theme === 'starter') return '_style-starter';
+
   const media = skinMedia(preset);
 
   return `_style-${media}${theme === 'minimal' ? '-minimal' : ''}`;

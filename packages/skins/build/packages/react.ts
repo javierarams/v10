@@ -2,9 +2,9 @@ import type { Graph, GraphModule } from 'vjsc/graph';
 import { bundleStyles, relativeImport, rewriteImports, stripStyleImports } from 'vjsc/graph';
 
 import type { SkinModuleMeta } from '../../src/meta.ts';
-import { skinCatalogEntry } from '../catalog.ts';
+import { skinCatalog, skinCatalogEntry } from '../catalog.ts';
 import { skinClassNameMergeImport } from '../imports.ts';
-import { skinBaseStylesheet, skinPresets, skinSourceDirectory } from '../skin.ts';
+import { skinBaseStylesheet, skinSourceDirectory } from '../skin.ts';
 import { type SkinRoot, skinRoots } from '../variants.ts';
 import type { GeneratedPackageFile } from './files.ts';
 import { addCopiedFiles, addGenerated, generatedFiles } from './utils.ts';
@@ -66,7 +66,7 @@ export async function createReactPackageSkins(
   for (const skin of skins) {
     const publicRoot = `${packageRoot}/presets/${skin.preset}`;
     const entry = skinCatalogEntry(skin.root.meta.name);
-    const publicName = skin.theme === 'minimal' ? 'minimal-skin' : 'skin';
+    const publicName = skin.theme === 'default' ? 'skin' : `${skin.theme}-skin`;
     const component = entry.component;
     const generatedComponent = entry.exportName;
     const generatedRoot = destinations.get(skin.root.id)!;
@@ -103,11 +103,11 @@ export async function createReactPackageSkins(
 }
 
 export function reactPackageSkinOwnedPaths(): string[] {
-  const publicPaths = skinPresets.flatMap((preset) =>
-    ['skin.tsx', 'skin.css', 'minimal-skin.tsx', 'minimal-skin.css'].map(
-      (filename) => `${packageRoot}/presets/${preset}/${filename}`
-    )
-  );
+  const publicPaths = skinCatalog.flatMap(({ preset, theme }) => {
+    const name = theme === 'default' ? 'skin' : `${theme}-skin`;
+
+    return [`${packageRoot}/presets/${preset}/${name}.tsx`, `${packageRoot}/presets/${preset}/${name}.css`];
+  });
 
   return [
     internalRoot,
@@ -185,7 +185,8 @@ function reactFrameworkImport(specifier: string): string | undefined {
 
   if (specifier === '@videojs/react/icons') return `${packageRoot}/icons/index.ts`;
 
-  if (specifier === '@videojs/react/icons/minimal') return `${packageRoot}/icons/minimal/index.ts`;
+  const family = specifier.match(/^@videojs\/react\/icons\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)?.[1];
+  if (family) return `${packageRoot}/icons/${family}/index.ts`;
 
   return undefined;
 }

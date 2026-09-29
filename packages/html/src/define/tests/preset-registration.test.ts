@@ -62,6 +62,10 @@ describe('preset registration boundaries', () => {
   });
 
   it.each([
+    ['video/starter-skin', 'video-starter-skin', () => import('../video/starter-skin')],
+    ['audio/starter-skin', 'audio-starter-skin', () => import('../audio/starter-skin')],
+    ['live-video/starter-skin', 'live-video-starter-skin', () => import('../live-video/starter-skin')],
+    ['live-audio/starter-skin', 'live-audio-starter-skin', () => import('../live-audio/starter-skin')],
     ['video/minimal-skin', 'video-minimal-skin', () => import('../video/minimal-skin')],
     ['audio/minimal-skin', 'audio-minimal-skin', () => import('../audio/minimal-skin')],
     ['live-video/minimal-skin', 'live-video-minimal-skin', () => import('../live-video/minimal-skin')],
