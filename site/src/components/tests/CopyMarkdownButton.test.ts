@@ -120,7 +120,7 @@ describe('markdownUrl', () => {
       expect.stringContaining('source-url=')
     );
 
-    for (const name of ['Open in ChatGPT', 'Open in Claude']) {
+    for (const name of ['Open in ChatGPT', 'Open in Claude', 'Open in Cursor']) {
       const href = (await screen.findByRole('menuitem', { name })).getAttribute('href') ?? '';
 
       expect(decodeURIComponent(href)).not.toContain('source-url');

@@ -5,13 +5,14 @@ import MuxUploader, {
   MuxUploaderRetry,
   MuxUploaderStatus,
 } from '@mux/mux-uploader-react';
+import { detectRenderer } from '@videojs/installation';
 import { actions } from 'astro:actions';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 
 import CloudUpload from '@/assets/icons/cloud-upload.svg?react';
 import MuxLogo from '@/assets/logos/mux-small.svg?react';
 import { MUX_URL } from '@/consts';
-import { muxPlaybackId, media, sourceUrl } from '@/stores/installation';
+import { muxPlaybackId, media, sourceUrl, useCase } from '@/stores/installation';
 import { initiateAuthPopup } from '@/utils/mux/auth-flow';
 import { pollForPlaybackId } from '@/utils/mux/polling';
 
@@ -25,7 +26,7 @@ import UploaderOverlay from './UploaderOverlay';
  *
  * Flow: 1. User drops/selects file → endpoint() called 2. Try to create upload URL (requires auth) 3. If 401: show
  * login overlay, wait for auth, retry 4. Upload begins with returned URL 5. On success: poll for playback ID 6. When
- * ready: update renderer to 'hls', store playback ID in nanostore
+ * ready: store the playback ID and stream URL, and select the Mux media source for the preset
  */
 export default function MuxUploaderPanel() {
   // Local state for upload flow (not shared across islands)
@@ -39,6 +40,8 @@ export default function MuxUploaderPanel() {
   const loginResolverRef = useRef<((url: string) => void) | null>(null);
   // Ref to the MuxUploader element for dispatching reset events
   const uploaderRef = useRef<HTMLElement>(null);
+  // The drop zone and file picker find their uploader by id, and a page can show more than one panel.
+  const uploaderId = `mux-uploader-${useId().replace(/[^a-z0-9]/gi, '')}`;
 
   /**
    * Endpoint function called by MuxUploader when file is selected. Returns a Promise that resolves with the upload URL.
@@ -107,7 +110,7 @@ export default function MuxUploaderPanel() {
     });
   }, []);
 
-  /** Polls Mux API for playback ID after upload completes. Updates renderer to 'mux' and stores playback ID on success. */
+  /** Polls Mux API for playback ID after upload completes, then points the installation at the new stream. */
   const handleUploadSuccess = useCallback(async () => {
     if (!uploadId) return;
 
@@ -146,11 +149,16 @@ export default function MuxUploaderPanel() {
     }
 
     // Success! Update local state and nanostores (for cross-island use)
+    const streamUrl = `https://stream.mux.com/${result.playbackId}.m3u8`;
+    const detected = detectRenderer(streamUrl, useCase.get())?.renderer;
+
     setPlaybackId(result.playbackId);
     setState('ready');
-    media.set('hls');
+
+    if (detected) media.set(detected);
+
     muxPlaybackId.set(result.playbackId);
-    sourceUrl.set(`https://stream.mux.com/${result.playbackId}.m3u8`);
+    sourceUrl.set(streamUrl);
   }, [uploadId]);
 
   /** Resets uploader to try again after error */
@@ -170,7 +178,7 @@ export default function MuxUploaderPanel() {
       <MuxUploader
         // @ts-expect-error — MuxUploaderElement type not hoisted by pnpm; only used for dispatchEvent
         ref={uploaderRef}
-        id="mux-uploader"
+        id={uploaderId}
         className="hidden"
         noDrop
         noProgress
@@ -181,7 +189,7 @@ export default function MuxUploaderPanel() {
       />
       {/* Custom Mux Uploader UI */}
       <MuxUploaderDrop
-        muxUploader="mux-uploader"
+        muxUploader={uploaderId}
         className="flex w-full flex-col items-center justify-center gap-4 px-6 py-10 text-center"
         overlay
         overlayText="Let it go"
@@ -200,7 +208,7 @@ export default function MuxUploaderPanel() {
         <span slot="separator" className="sr-only">
           or
         </span>
-        <MuxUploaderFileSelect muxUploader="mux-uploader">
+        <MuxUploaderFileSelect muxUploader={uploaderId}>
           <button
             type="button"
             className="bg-faded-black text-manila-light dark:bg-manila-light dark:text-faded-black text-p3 intent:bg-accent intent:text-faded-black corner-squircle inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg px-5 font-semibold shadow-sm transition select-none"
@@ -208,9 +216,9 @@ export default function MuxUploaderPanel() {
             Select a file
           </button>
         </MuxUploaderFileSelect>
-        <MuxUploaderStatus muxUploader="mux-uploader" className="text-p3" />
-        <MuxUploaderRetry muxUploader="mux-uploader" className="text-p3" />
-        <MuxUploaderProgress type="percentage" muxUploader="mux-uploader" className="text-p3 font-mono" />
+        <MuxUploaderStatus muxUploader={uploaderId} className="text-p3" />
+        <MuxUploaderRetry muxUploader={uploaderId} className="text-p3" />
+        <MuxUploaderProgress type="percentage" muxUploader={uploaderId} className="text-p3 font-mono" />
         <span className="text-p4 dark:text-muted mt-2 inline-flex items-center gap-1.5">
           Powered by{' '}
           <a

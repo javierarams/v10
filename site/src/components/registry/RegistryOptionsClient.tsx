@@ -20,7 +20,7 @@ import RadioIcon from '@/assets/icons/radio.svg?react';
 import CssLogo from '@/assets/logos/brands/css3.svg?react';
 import TailwindLogo from '@/assets/logos/brands/tailwindcss.svg?react';
 import CardRadioGroup from '@/components/CardRadioGroup';
-import SkinPreview from '@/components/installation/SkinPreview';
+import SkinIcon from '@/components/installation/SkinIcon';
 import { useRegistrySkin, useRegistryStyling, useRegistryTheme } from '@/components/installation/useRegistryFramework';
 import { useSelection } from '@/components/installation/useSelection';
 import { withSelectionMarker } from '@/components/installation/withSelectionMarker';
@@ -55,8 +55,8 @@ const SKIN_ICONS = {
 } satisfies Record<RegistryPreset, ReactNode>;
 
 const THEME_ICONS = {
-  default: <SkinPreview skin="video" className="size-4" />,
-  minimal: <SkinPreview skin="minimal-video" className="size-4" />,
+  default: <SkinIcon skin="default" className="size-4" />,
+  minimal: <SkinIcon skin="minimal" className="size-4" />,
 } satisfies Record<RegistryTheme, ReactNode>;
 
 interface Props {

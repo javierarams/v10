@@ -1,45 +1,42 @@
 ---
-import { installationCommand, SKILLS_REPOSITORY_URL, skillsCommand } from '@videojs/installation';
+import { installationCommand, isInstallationFramework } from '@videojs/installation';
 
-import CopyButton from '@/components/CopyButton';
+import AgentPrompt from '@/components/installation/AgentPrompt';
 import P from '@/components/typography/P.astro';
-import { INSTALLATION_ROUTES, isInstallationRouteSegment } from '@/utils/installation/routes';
+import { AGENT_PROMPT_SKILL_INSTRUCTIONS } from '@/utils/installation/agent-prompt';
+import { getInstallationRouteSegment, INSTALLATION_ROUTES } from '@/utils/installation/routes';
 
-const route = Astro.params.framework;
-const routeConfig = isInstallationRouteSegment(route) ? INSTALLATION_ROUTES[route] : undefined;
+// Installation guides fix the method and framework through their route; other pages, such as Build with AI, start
+// from the docs framework.
+const route = getInstallationRouteSegment(Astro.url.pathname);
+const docsFramework = Astro.params.framework;
+const framework = route
+  ? INSTALLATION_ROUTES[route].pickerFramework
+  : isInstallationFramework(docsFramework)
+    ? docsFramework
+    : 'react';
+
+// The Markdown twin keeps the route-level command, which leaves every other choice to the agent's project inspection.
 // The CLI detects the framework from the project, so each packaged guide names its own in case the repository holds
 // another one.
 const input = route === 'cdn'
   ? { method: 'cdn', framework: 'html' }
-  : routeConfig?.method === 'packaged'
-    ? { framework: routeConfig.pickerFramework }
+  : !route || INSTALLATION_ROUTES[route].method === 'packaged'
+    ? { framework }
     : undefined;
 const init = installationCommand(input, null);
 const installationPrompt = route === 'shadcn'
   ? `When installation details are needed, run \`${installationCommand({ method: 'shadcn', framework: 'react' }, null)}\` for React, or \`${installationCommand({ method: 'shadcn', framework: 'html' }, null)}\` for plain HTML. The command prints version-matched choices and instructions without changing files.`
   : `When installation details are needed, run \`${init}\` to print the version-matched choices and instructions without changing files.`;
-const prompt = `Install the Video.js skill: run \`${skillsCommand()}\` and follow the steps for the agent you are running in. If you can't run commands, follow the install instructions at ${SKILLS_REPOSITORY_URL} instead. Then use the Video.js skill when you work on video or audio in this project. ${installationPrompt}`;
+const agentPrompt = `${AGENT_PROMPT_SKILL_INSTRUCTIONS} ${installationPrompt}`;
 ---
 
-<P>Paste this prompt into your coding agent:</P>
+<P>Copy this prompt into your coding agent. It works as is, or tell it what you're building first.</P>
 
-<div
-  class="mx-auto my-6 max-w-3xl overflow-hidden rounded-xl corner-squircle border border-line bg-surface shadow-xs"
-  data-agent-prompt-card
->
-  <pre class="m-0 overflow-x-auto whitespace-pre-wrap bg-soot p-5"><code
-      class="font-mono text-code leading-relaxed text-manila-light"
-      data-agent-prompt>{prompt}</code
-    ></pre>
-  <div class="flex justify-end border-t border-line bg-surface-raised p-3" data-llms-ignore>
-    <CopyButton
-      client:idle
-      copyFrom={{ container: '[data-agent-prompt-card]', target: '[data-agent-prompt]' }}
-      className="inline-flex h-9 cursor-pointer items-center rounded-lg corner-squircle border border-line bg-surface px-3 text-p3 font-semibold shadow-xs select-none intent:border-line-strong intent:bg-hover focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-gold disabled:cursor-wait"
-      copied="Copied"
-      copiedCheck
-    >
-      Copy prompt
-    </CopyButton>
-  </div>
+<div data-llms-ignore>
+  <AgentPrompt client:idle route={route} framework={framework} />
+</div>
+
+<div hidden data-llms-only>
+  <pre><code data-agent-prompt-markdown>{agentPrompt}</code></pre>
 </div>
