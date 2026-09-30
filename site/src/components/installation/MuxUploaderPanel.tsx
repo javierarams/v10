@@ -174,7 +174,10 @@ export default function MuxUploaderPanel() {
   }, []);
 
   return (
-    <div className="corner-squircle border-line-strong bg-surface relative isolate w-full overflow-hidden rounded-xl border border-dashed">
+    <div
+      className="corner-squircle border-line-strong bg-surface relative isolate w-full overflow-hidden rounded-xl border border-dashed"
+      data-mux-uploader-panel
+    >
       <MuxUploader
         // @ts-expect-error — MuxUploaderElement type not hoisted by pnpm; only used for dispatchEvent
         ref={uploaderRef}
