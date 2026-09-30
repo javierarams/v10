@@ -1,6 +1,8 @@
+import { HTMLVideoAdapter } from '@videojs/media/dom';
+import Hls from 'hls.js';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-import { removeHlsTextTracks, withPreservedTextTracks } from '../text-tracks';
+import { HlsJsTextTracksMixin, removeHlsTextTracks, withPreservedTextTracks } from '../text-tracks';
 
 /**
  * Jsdom has no text track implementation, so the media element and its tracks are stubbed with the parts the helper
@@ -183,5 +185,149 @@ describe('removeHlsTextTracks', () => {
 
   it('does nothing without a media element', () => {
     expect(() => removeHlsTextTracks(null)).not.toThrow();
+  });
+});
+
+/**
+ * Jsdom implements neither `HTMLTrackElement.track` nor a text track list that dispatches events, so the mixin gets the
+ * parts it reaches for: a track object per `<track>` element, and a list it can subscribe to.
+ */
+function stubTrackSupport(video: HTMLVideoElement): () => void {
+  const tracks = new WeakMap<HTMLTrackElement, FakeTextTrack>();
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLTrackElement.prototype, 'track');
+
+  Object.defineProperty(HTMLTrackElement.prototype, 'track', {
+    configurable: true,
+    get(this: HTMLTrackElement) {
+      let track = tracks.get(this);
+
+      if (!track) {
+        track = new FakeTextTrack();
+        tracks.set(this, track);
+      }
+
+      return track;
+    },
+  });
+
+  Object.defineProperty(video, 'textTracks', {
+    configurable: true,
+    value: Object.assign(new EventTarget(), { getTrackById: () => null }),
+  });
+
+  return () => {
+    if (descriptor) Object.defineProperty(HTMLTrackElement.prototype, 'track', descriptor);
+    else Reflect.deleteProperty(HTMLTrackElement.prototype, 'track');
+  };
+}
+
+function fakeEngine() {
+  const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
+
+  const emit = (event: string, ...args: unknown[]) => {
+    for (const fn of [...(listeners.get(event) ?? [])]) fn(event, ...args);
+  };
+
+  // SAFETY: the mixin reads only `on`, `off`, `subtitleTracks`, and `subtitleTrack` from the engine.
+  const engine = {
+    subtitleTracks: [{ lang: 'de', name: 'German', type: 'SUBTITLES' }],
+    subtitleTrack: -1,
+    on(event: string, fn: (...args: unknown[]) => void) {
+      if (!listeners.has(event)) listeners.set(event, new Set());
+
+      listeners.get(event)!.add(fn);
+    },
+    off(event: string, fn: (...args: unknown[]) => void) {
+      listeners.get(event)?.delete(fn);
+    },
+  } as unknown as Hls;
+
+  return { engine, emit };
+}
+
+class FakeHost extends HTMLVideoAdapter {
+  engine: Hls | null;
+
+  constructor(engine: Hls | null = null) {
+    super();
+    this.engine = engine;
+  }
+}
+
+const TextTracksHost = HlsJsTextTracksMixin(FakeHost);
+
+/** One `#EXT-X-MEDIA:TYPE=SUBTITLES` rendition, shaped the way hls.js reports it. */
+const SUBTITLE_TRACKS_FOUND = {
+  tracks: [{ label: 'German', kind: 'subtitles', default: false, subtitleTrack: { lang: 'de' } }],
+};
+
+function setup() {
+  const { engine, emit } = fakeEngine();
+  const host = new TextTracksHost(engine);
+  const video = document.createElement('video');
+  const restore = stubTrackSupport(video);
+
+  host.attach(video);
+
+  const hlsTrackCount = () => video.querySelectorAll('track[data-removeondestroy]').length;
+
+  return { emit, hlsTrackCount, restore };
+}
+
+describe('HlsJsTextTracksMixin', () => {
+  it('keeps the tracks of the current load when MEDIA_ATTACHED arrives after the manifest', () => {
+    const { emit, hlsTrackCount, restore } = setup();
+
+    try {
+      emit(Hls.Events.MANIFEST_LOADING);
+      emit(Hls.Events.NON_NATIVE_TEXT_TRACKS_FOUND, SUBTITLE_TRACKS_FOUND);
+      emit(Hls.Events.MEDIA_ATTACHED);
+
+      expect(hlsTrackCount()).toBe(1);
+    } finally {
+      restore();
+    }
+  });
+
+  it('keeps the tracks when MEDIA_ATTACHED arrives before the manifest', () => {
+    const { emit, hlsTrackCount, restore } = setup();
+
+    try {
+      emit(Hls.Events.MEDIA_ATTACHED);
+      emit(Hls.Events.MANIFEST_LOADING);
+      emit(Hls.Events.NON_NATIVE_TEXT_TRACKS_FOUND, SUBTITLE_TRACKS_FOUND);
+
+      expect(hlsTrackCount()).toBe(1);
+    } finally {
+      restore();
+    }
+  });
+
+  it('drops the tracks of the previous load when a new manifest reports none', () => {
+    const { emit, hlsTrackCount, restore } = setup();
+
+    try {
+      emit(Hls.Events.MANIFEST_LOADING);
+      emit(Hls.Events.NON_NATIVE_TEXT_TRACKS_FOUND, SUBTITLE_TRACKS_FOUND);
+      emit(Hls.Events.MANIFEST_LOADING);
+
+      expect(hlsTrackCount()).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
+  it.each([Hls.Events.MEDIA_DETACHED, Hls.Events.DESTROYING])('drops the tracks on %s', (event) => {
+    const { emit, hlsTrackCount, restore } = setup();
+
+    try {
+      emit(Hls.Events.MANIFEST_LOADING);
+      emit(Hls.Events.NON_NATIVE_TEXT_TRACKS_FOUND, SUBTITLE_TRACKS_FOUND);
+      emit(event);
+
+      expect(hlsTrackCount()).toBe(0);
+    } finally {
+      restore();
+    }
   });
 });

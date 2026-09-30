@@ -116,7 +116,12 @@ export function HlsJsTextTracksMixin<Base extends Constructor<HlsEngineHost>>(Ba
     constructor(...args: any[]) {
       super(...args);
 
-      this.engine?.on(Hls.Events.MANIFEST_LOADING, () => this.#init());
+      // A new manifest makes the previous tracks stale; attaching media only rebinds the handlers, and the tracks of
+      // the load in progress must survive it because `NON_NATIVE_TEXT_TRACKS_FOUND` fires once per manifest.
+      this.engine?.on(Hls.Events.MANIFEST_LOADING, () => {
+        removeHlsTextTracks(this.target);
+        this.#init();
+      });
       this.engine?.on(Hls.Events.MEDIA_ATTACHED, () => this.#init());
       this.engine?.on(Hls.Events.MEDIA_DETACHED, () => this.#destroy());
       this.engine?.on(Hls.Events.DESTROYING, () => this.#destroy());
@@ -125,6 +130,7 @@ export function HlsJsTextTracksMixin<Base extends Constructor<HlsEngineHost>>(Ba
     #destroy(): void {
       this.#disconnect?.abort();
       this.#disconnect = null;
+      removeHlsTextTracks(this.target);
     }
 
     #init(): void {
@@ -227,7 +233,6 @@ export function HlsJsTextTracksMixin<Base extends Constructor<HlsEngineHost>>(Ba
         () => {
           engine.off(Hls.Events.NON_NATIVE_TEXT_TRACKS_FOUND, onTracksFound);
           engine.off(Hls.Events.CUES_PARSED, onCuesParsed);
-          removeHlsTextTracks(this.target);
         },
         { once: true }
       );
