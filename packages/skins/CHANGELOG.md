@@ -1,5 +1,23 @@
 # Changelog
 
+## [10.0.0-rc.5](https://github.com/videojs/v10/compare/@videojs/skins@10.0.0-rc.4...@videojs/skins@10.0.0-rc.5) (2026-09-30)
+
+
+### Features
+
+* **packages:** support chrome 111, firefox 121, and safari 16.4 ([#2951](https://github.com/videojs/v10/issues/2951)) ([710df96](https://github.com/videojs/v10/commit/710df96fc1bb5aceca96fa831082d61fd83af3c3))
+* **vjsc:** flatten [@scope](https://github.com/scope) in the packaged skins ([#2966](https://github.com/videojs/v10/issues/2966)) ([d5721ab](https://github.com/videojs/v10/commit/d5721abebbe0a0b3d8e65820c7152d302f20bb9d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @videojs/core bumped to 10.0.0-rc.5
+    * @videojs/icons bumped to 10.0.0-rc.5
+    * @videojs/installation bumped to 10.0.0-rc.5
+    * @videojs/utils bumped to 10.0.0-rc.5
+
 ## [10.0.0-rc.4](https://github.com/videojs/v10/compare/@videojs/skins@10.0.0-rc.3...@videojs/skins@10.0.0-rc.4) (2026-09-26)
 
 

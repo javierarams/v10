@@ -1,5 +1,41 @@
 # Changelog
 
+## [10.0.0-rc.5](https://github.com/videojs/v10/compare/@videojs/cdn@10.0.0-rc.4...@videojs/cdn@10.0.0-rc.5) (2026-09-30)
+
+
+### Features
+
+* **packages:** support chrome 111, firefox 121, and safari 16.4 ([#2951](https://github.com/videojs/v10/issues/2951)) ([710df96](https://github.com/videojs/v10/commit/710df96fc1bb5aceca96fa831082d61fd83af3c3))
+
+
+### Bug Fixes
+
+* **packages:** name Video.js 10 in npm descriptions and keywords ([#2995](https://github.com/videojs/v10/issues/2995)) ([8fda9a3](https://github.com/videojs/v10/commit/8fda9a36bede5cf92d446e25e56a96625cd60bc9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @videojs/cloudflare-video bumped to 10.0.0-rc.5
+    * @videojs/core bumped to 10.0.0-rc.5
+    * @videojs/dash-video bumped to 10.0.0-rc.5
+    * @videojs/google-cast bumped to 10.0.0-rc.5
+    * @videojs/hlsjs-video bumped to 10.0.0-rc.5
+    * @videojs/html bumped to 10.0.0-rc.5
+    * @videojs/mux-audio bumped to 10.0.0-rc.5
+    * @videojs/mux-data bumped to 10.0.0-rc.5
+    * @videojs/mux-video bumped to 10.0.0-rc.5
+    * @videojs/native-hls-video bumped to 10.0.0-rc.5
+    * @videojs/shaka-video bumped to 10.0.0-rc.5
+    * @videojs/spf bumped to 10.0.0-rc.5
+    * @videojs/spotify-audio bumped to 10.0.0-rc.5
+    * @videojs/tiktok-video bumped to 10.0.0-rc.5
+    * @videojs/twitch-video bumped to 10.0.0-rc.5
+    * @videojs/vimeo-video bumped to 10.0.0-rc.5
+    * @videojs/wistia-video bumped to 10.0.0-rc.5
+    * @videojs/youtube-video bumped to 10.0.0-rc.5
+
 ## [10.0.0-rc.4](https://github.com/videojs/v10/compare/@videojs/cdn@10.0.0-rc.3...@videojs/cdn@10.0.0-rc.4) (2026-09-26)
 
 

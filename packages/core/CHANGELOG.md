@@ -1,5 +1,37 @@
 # Changelog
 
+## [10.0.0-rc.5](https://github.com/videojs/v10/compare/@videojs/core@10.0.0-rc.4...@videojs/core@10.0.0-rc.5) (2026-09-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **media:** tidy text track state ([#3057](https://github.com/videojs/v10/issues/3057))
+* **core:** align player store API ([#3012](https://github.com/videojs/v10/issues/3012))
+
+### Features
+
+* **core:** add deriveCustomStatus to display custom actions ([#3064](https://github.com/videojs/v10/issues/3064)) ([5b4ed5e](https://github.com/videojs/v10/commit/5b4ed5e323f48b0f674f0c5640ee41c527f10f81))
+
+
+### Bug Fixes
+
+* **core:** preserve submenu exit transitions ([#3025](https://github.com/videojs/v10/issues/3025)) ([89c1c58](https://github.com/videojs/v10/commit/89c1c5803d152025e88f34e0d1782bbd52632d67))
+
+
+### Code Refactoring
+
+* **core:** align player store API ([#3012](https://github.com/videojs/v10/issues/3012)) ([d1f57f8](https://github.com/videojs/v10/commit/d1f57f8ea733d10247b8e9bd9f8b5577e52ed66b))
+* **media:** tidy text track state ([#3057](https://github.com/videojs/v10/issues/3057)) ([614b77d](https://github.com/videojs/v10/commit/614b77dce7d9a3ed60baa1b0e2af854c8c8d865b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @videojs/media bumped to 10.0.0-rc.5
+    * @videojs/store bumped to 10.0.0-rc.5
+    * @videojs/utils bumped to 10.0.0-rc.5
+
 ## [10.0.0-rc.4](https://github.com/videojs/v10/compare/@videojs/core@10.0.0-rc.3...@videojs/core@10.0.0-rc.4) (2026-09-26)
 
 
